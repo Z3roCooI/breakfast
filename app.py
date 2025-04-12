@@ -38,4 +38,52 @@ if uploaded_file:
             st.warning("Please enter a room number.")
         elif room in st.session_state.checked_in:
             st.info(f"⚠️ Room {room} already checked in.")
-        elif room in
+        elif room in expected_rooms:
+            st.session_state.checked_in.add(room)
+            st.success(f"✅ Room {room} checked in.")
+        else:
+            st.session_state.unexpected_guests.add(room)
+            st.error(f"❌ Room {room} is NOT on the list!")
+
+    st.divider()
+    st.subheader("📋 Room Check-In Status")
+
+    # Define room blocks for vertical columns
+    room_blocks = {
+        "100–139": range(100, 140),
+        "200–239": range(200, 240),
+        "300–339": range(300, 340),
+        "400–439": range(400, 440),
+        "500–539": range(500, 540),
+        "600–639": range(600, 640),
+    }
+
+    columns = st.columns(6)
+
+    for col, (block_name, room_range) in zip(columns, room_blocks.items()):
+        col.subheader(f"🚪 {block_name}")
+        for room in room_range:
+            room_str = str(room)
+            if room_str in st.session_state.checked_in:
+                col.markdown(f"<span style='color:green'>✅ {room}</span>", unsafe_allow_html=True)
+            elif room_str in st.session_state.unexpected_guests:
+                col.markdown(f"<span style='color:red'>❗ {room}</span>", unsafe_allow_html=True)
+            elif room_str in expected_rooms:
+                col.markdown(f"🔲 {room}")
+            else:
+                col.markdown(f"<span style='color:gray'>—</span>", unsafe_allow_html=True)
+
+    # Unexpected rooms outside displayed blocks
+    known_range = set()
+    for rng in room_blocks.values():
+        known_range.update(str(num) for num in rng)
+
+    extra_unexpected = [
+        room for room in st.session_state.unexpected_guests if room not in known_range
+    ]
+    if extra_unexpected:
+        st.subheader("🚨 Unexpected Guests Outside Displayed Blocks")
+        st.markdown(", ".join(extra_unexpected))
+
+else:
+    st.info("⬅️ Please upload a text file with expected room numbers.")
