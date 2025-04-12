@@ -58,7 +58,7 @@ if uploaded_file:
 
     # Split display_rooms evenly into 6 chunks for columns
     col_count = 6
-    chunk_size = (len(display_rooms) + col_count - 1) // col_count
+    chunk_size = max(1, (len(display_rooms) + col_count - 1) // col_count)
     room_chunks = [display_rooms[i:i + chunk_size] for i in range(0, len(display_rooms), chunk_size)]
 
     # Make 6 columns
