@@ -62,9 +62,21 @@ if uploaded_file:
         room_chunks = [displayed_rooms[i:i + chunk_size] for i in range(0, len(displayed_rooms), chunk_size)]
         columns = st.columns(col_count)
 
-        for col, chunk in zip(columns, room_chunks):
+                for col, chunk in zip(columns, room_chunks):
             for room in chunk:
                 if room in st.session_state.checked_in:
-                    col.markdown(f"<div style='font-size: 14px; color: green;'>✅ {room}</div>", unsafe_allow_html=True)
+                    col.markdown(
+                        f"<div style='font-size: 14px; color: green;'>✅ {room}</div>",
+                        unsafe_allow_html=True
+                    )
                 elif room in st.session_state.unexpected_guests:
-                    col.markdown(f"<div style='font-size: 14px
+                    col.markdown(
+                        f"<div style='font-size: 14px; color: red;'>❗ {room}</div>",
+                        unsafe_allow_html=True
+                    )
+                elif room in expected_rooms:
+                    col.markdown(
+                        f"<div style='font-size: 14px;'>🔲 {room}</div>",
+                        unsafe_allow_html=True
+                    )
+
