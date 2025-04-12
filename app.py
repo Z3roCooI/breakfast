@@ -50,7 +50,8 @@ if uploaded_file:
 
     # Determine all rooms that have been interacted with
     displayed_rooms = sorted(
-        st.session_state.checked_in.union(st.session_state.unexpected_guests, expected_rooms)
+        st.session_state.checked_in.union(st.session_state.unexpected_guests, expected_rooms),
+        key=int
     )
 
     if not displayed_rooms:
@@ -62,7 +63,7 @@ if uploaded_file:
         room_chunks = [displayed_rooms[i:i + chunk_size] for i in range(0, len(displayed_rooms), chunk_size)]
         columns = st.columns(col_count)
 
-            for col, chunk in zip(columns, room_chunks):
+        for col, chunk in zip(columns, room_chunks):
             for room in chunk:
                 if room in st.session_state.checked_in:
                     col.markdown(
@@ -80,3 +81,5 @@ if uploaded_file:
                         unsafe_allow_html=True
                     )
 
+else:
+    st.info("⬅️ Please upload a text file with expected room numbers.")
