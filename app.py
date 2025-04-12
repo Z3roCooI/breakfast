@@ -32,22 +32,43 @@ if uploaded_file:
     st.subheader("🎫 Check-In")
     room_input = st.text_input("Enter room number:")
 
-    if st.button("Check-In"):
-        room = room_input.strip()
-        if not room.isdigit():
-            st.warning("Please enter a valid room number.")
-        else:
-            room_num = int(room)
-            if room_num < 100 or room_num > 639:
-                st.warning("Room number must be between 100 and 639.")
-            elif room in st.session_state.checked_in:
-                st.info(f"⚠️ Room {room} already checked in.")
-            elif room in expected_rooms:
-                st.session_state.checked_in.add(room)
-                st.success(f"✅ Room {room} checked in.")
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        if st.button("✅ Check-In"):
+            room = room_input.strip()
+            if not room.isdigit():
+                st.warning("Please enter a valid room number.")
             else:
-                st.session_state.unexpected_guests.add(room)
-                st.error(f"❌ Room {room} is NOT on the list!")
+                room_num = int(room)
+                if room_num < 100 or room_num > 639:
+                    st.warning("Room number must be between 100 and 639.")
+                elif room in st.session_state.checked_in:
+                    st.info(f"⚠️ Room {room} already checked in.")
+                elif room in expected_rooms:
+                    st.session_state.checked_in.add(room)
+                    st.success(f"✅ Room {room} checked in.")
+                else:
+                    st.session_state.unexpected_guests.add(room)
+                    st.error(f"❌ Room {room} is NOT on the list!")
+
+    with col2:
+        if st.button("❌ Remove Room"):
+            room = room_input.strip()
+            if not room.isdigit():
+                st.warning("Please enter a valid room number to remove.")
+            else:
+                removed = False
+                if room in st.session_state.checked_in:
+                    st.session_state.checked_in.remove(room)
+                    removed = True
+                if room in st.session_state.unexpected_guests:
+                    st.session_state.unexpected_guests.remove(room)
+                    removed = True
+                if removed:
+                    st.success(f"🗑️ Room {room} removed.")
+                else:
+                    st.info(f"Room {room} was not on the list.")
 
     st.divider()
     st.subheader("📋 Room Check-In Status")
