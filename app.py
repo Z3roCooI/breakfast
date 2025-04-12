@@ -14,7 +14,7 @@ with st.sidebar:
 
 # Main logic
 if uploaded_file:
-    # Read and decode uploaded file
+    # Decode and load room list
     expected_rooms = set(
         line.strip() for line in uploaded_file.getvalue().decode("utf-8").splitlines()
         if line.strip().isdigit()
@@ -28,7 +28,7 @@ if uploaded_file:
     if "unexpected_guests" not in st.session_state:
         st.session_state.unexpected_guests = set()
 
-    # Check-in input
+    # Check-in UI
     st.subheader("🎫 Check-In")
     room_input = st.text_input("Enter room number:")
 
@@ -46,26 +46,25 @@ if uploaded_file:
             st.error(f"❌ Room {room} is NOT on the list!")
 
     st.divider()
-    st.subheader("📋 Room Check-In Status")
+    st.subheader("📋 Room Status (Dynamic View)")
 
-    # Define room range (100-639)
-    full_range = list(range(100, 640))
+    # Determine all rooms that have been interacted with
+    displayed_rooms = sorted(
+        st.session_state.checked_in.union(st.session_state.unexpected_guests, expected_rooms)
+    )
 
-    # Collect all rooms that should be shown (expected + unexpected + checked-in)
-    display_rooms = sorted(set(
-        full_range
-    ).intersection(expected_rooms.union(st.session_state.unexpected_guests)))
+    if not displayed_rooms:
+        st.info("No rooms to display yet.")
+    else:
+        # Split into 6 columns dynamically
+        col_count = 6
+        chunk_size = max(1, (len(displayed_rooms) + col_count - 1) // col_count)
+        room_chunks = [displayed_rooms[i:i + chunk_size] for i in range(0, len(displayed_rooms), chunk_size)]
+        columns = st.columns(col_count)
 
-    # Split display_rooms evenly into 6 chunks for columns
-    col_count = 6
-    chunk_size = max(1, (len(display_rooms) + col_count - 1) // col_count)
-    room_chunks = [display_rooms[i:i + chunk_size] for i in range(0, len(display_rooms), chunk_size)]
-
-    # Make 6 columns
-    columns = st.columns(col_count)
-
-    for col, chunk in zip(columns, room_chunks):
-        for room in chunk:
-            room_str = str(room)
-            if room_str in st.session_state.checked_in:
-                col.markdown(f"<div style='font-size: 14px; color: green;'>✅ {room}</div>", unsafe_allow_html=True)
+        for col, chunk in zip(columns, room_chunks):
+            for room in chunk:
+                if room in st.session_state.checked_in:
+                    col.markdown(f"<div style='font-size: 14px; color: green;'>✅ {room}</div>", unsafe_allow_html=True)
+                elif room in st.session_state.unexpected_guests:
+                    col.markdown(f"<div style='font-size: 14px
