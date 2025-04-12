@@ -6,7 +6,11 @@ st.title("🍳 Breakfast Check-In Tool")
 uploaded_file = st.file_uploader("Upload expected_rooms.txt", type="txt")
 
 if uploaded_file:
-    expected_rooms = set(line.strip() for line in uploaded_file if line.strip().isdigit())
+    expected_rooms = set(
+    line.strip() for line in uploaded_file.getvalue().decode("utf-8").splitlines()
+    if line.strip().isdigit()
+)
+
     st.write("📄 Rooms loaded:", expected_rooms)
 
     if "checked_in" not in st.session_state:
