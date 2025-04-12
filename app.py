@@ -17,7 +17,7 @@ if uploaded_file:
     # Decode and load room list
     expected_rooms = set(
         line.strip() for line in uploaded_file.getvalue().decode("utf-8").splitlines()
-        if line.strip().isdigit()
+        if line.strip().isdigit() and 100 <= int(line.strip()) <= 639
     )
     st.success("Room list loaded.")
     st.markdown(f"**🛏️ Expected rooms:** {len(expected_rooms)} total")
@@ -34,52 +34,32 @@ if uploaded_file:
 
     if st.button("Check-In"):
         room = room_input.strip()
-        if not room:
-            st.warning("Please enter a room number.")
-        elif room in st.session_state.checked_in:
-            st.info(f"⚠️ Room {room} already checked in.")
-        elif room in expected_rooms:
-            st.session_state.checked_in.add(room)
-            st.success(f"✅ Room {room} checked in.")
+        if not room.isdigit():
+            st.warning("Please enter a valid room number.")
         else:
-            st.session_state.unexpected_guests.add(room)
-            st.error(f"❌ Room {room} is NOT on the list!")
+            room_num = int(room)
+            if room_num < 100 or room_num > 639:
+                st.warning("Room number must be between 100 and 639.")
+            elif room in st.session_state.checked_in:
+                st.info(f"⚠️ Room {room} already checked in.")
+            elif room in expected_rooms:
+                st.session_state.checked_in.add(room)
+                st.success(f"✅ Room {room} checked in.")
+            else:
+                st.session_state.unexpected_guests.add(room)
+                st.error(f"❌ Room {room} is NOT on the list!")
 
     st.divider()
-    st.subheader("📋 Room Status (Dynamic View)")
+    st.subheader("📋 Room Check-In Status (by Range)")
 
-    # Determine all rooms that have been interacted with
-    displayed_rooms = sorted(
-        st.session_state.checked_in.union(st.session_state.unexpected_guests, expected_rooms),
-        key=int
-    )
+    # Define fixed blocks for each column
+    room_blocks = {
+        "100–139": range(100, 140),
+        "200–239": range(200, 240),
+        "300–339": range(300, 340),
+        "400–439": range(400, 440),
+        "500–539": range(500, 540),
+        "600–639": range(600, 640),
+    }
 
-    if not displayed_rooms:
-        st.info("No rooms to display yet.")
-    else:
-        # Split into 6 columns dynamically
-        col_count = 6
-        chunk_size = max(1, (len(displayed_rooms) + col_count - 1) // col_count)
-        room_chunks = [displayed_rooms[i:i + chunk_size] for i in range(0, len(displayed_rooms), chunk_size)]
-        columns = st.columns(col_count)
-
-        for col, chunk in zip(columns, room_chunks):
-            for room in chunk:
-                if room in st.session_state.checked_in:
-                    col.markdown(
-                        f"<div style='font-size: 14px; color: green;'>✅ {room}</div>",
-                        unsafe_allow_html=True
-                    )
-                elif room in st.session_state.unexpected_guests:
-                    col.markdown(
-                        f"<div style='font-size: 14px; color: red;'>❗ {room}</div>",
-                        unsafe_allow_html=True
-                    )
-                elif room in expected_rooms:
-                    col.markdown(
-                        f"<div style='font-size: 14px;'>🔲 {room}</div>",
-                        unsafe_allow_html=True
-                    )
-
-else:
-    st.info("⬅️ Please upload a text file with expected room numbers.")
+    columns = st.columns(6)
