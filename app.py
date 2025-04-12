@@ -48,42 +48,24 @@ if uploaded_file:
     st.divider()
     st.subheader("📋 Room Check-In Status")
 
-    # Define room blocks for vertical columns
-    room_blocks = {
-        "100–139": range(100, 140),
-        "200–239": range(200, 240),
-        "300–339": range(300, 340),
-        "400–439": range(400, 440),
-        "500–539": range(500, 540),
-        "600–639": range(600, 640),
-    }
+    # Define room range (100-639)
+    full_range = list(range(100, 640))
 
-    columns = st.columns(6)
+    # Collect all rooms that should be shown (expected + unexpected + checked-in)
+    display_rooms = sorted(set(
+        full_range
+    ).intersection(expected_rooms.union(st.session_state.unexpected_guests)))
 
-    for col, (block_name, room_range) in zip(columns, room_blocks.items()):
-        col.subheader(f"🚪 {block_name}")
-        for room in room_range:
+    # Split display_rooms evenly into 6 chunks for columns
+    col_count = 6
+    chunk_size = (len(display_rooms) + col_count - 1) // col_count
+    room_chunks = [display_rooms[i:i + chunk_size] for i in range(0, len(display_rooms), chunk_size)]
+
+    # Make 6 columns
+    columns = st.columns(col_count)
+
+    for col, chunk in zip(columns, room_chunks):
+        for room in chunk:
             room_str = str(room)
             if room_str in st.session_state.checked_in:
-                col.markdown(f"<span style='color:green'>✅ {room}</span>", unsafe_allow_html=True)
-            elif room_str in st.session_state.unexpected_guests:
-                col.markdown(f"<span style='color:red'>❗ {room}</span>", unsafe_allow_html=True)
-            elif room_str in expected_rooms:
-                col.markdown(f"🔲 {room}")
-            else:
-                col.markdown(f"<span style='color:gray'>—</span>", unsafe_allow_html=True)
-
-    # Unexpected rooms outside displayed blocks
-    known_range = set()
-    for rng in room_blocks.values():
-        known_range.update(str(num) for num in rng)
-
-    extra_unexpected = [
-        room for room in st.session_state.unexpected_guests if room not in known_range
-    ]
-    if extra_unexpected:
-        st.subheader("🚨 Unexpected Guests Outside Displayed Blocks")
-        st.markdown(", ".join(extra_unexpected))
-
-else:
-    st.info("⬅️ Please upload a text file with expected room numbers.")
+                col.markdown(f"<div style='font-size: 14px; color: green;'>✅ {room}</div>", unsafe_allow_html=True)
